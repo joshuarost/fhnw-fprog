@@ -1,1 +1,0 @@
-Platzhalter, damit der Ordner im git Repository bleibt.
