@@ -8,7 +8,6 @@ in für Mensch und Maschine einfach lesbarer Textform zum Zweck des Datenaustaus
 zwischen Anwendungen. [http://de.wikipedia.org/wiki/JavaScript_Object_Notation]
 
 Hier ein Beispiel JSON Dokument:
-
 {
     "firstName": "John",
     "lastName": "Smith",
@@ -54,7 +53,13 @@ Hinweise:
 - Falls Sie nicht weiter kommen, finden Sie ganz unten eine verschlüsselte Lösung damit Sie
   die folgenden Aufgaben trotzdem lösen können.
 
-> data JSON
+> data JSON = JNull
+>   | JBool Bool
+>   | JNum Double
+>   | JStr String
+>   | JSeq [JSON]
+>   | JObj [(String, JSON)]
+>   deriving Show
 
 
 2. Aufgabe
@@ -62,25 +67,46 @@ Definieren Sie die Funktion showJ, die JSON Daten in einen hübsch formatierten
 String übersetzt:
 
 > showJ :: JSON -> String
-> showJ = error "ToDo"
+> showJ JNull = "null"
+> showJ (JBool b) = show b
+> showJ (JNum n) = show n
+> showJ (JStr s) = "\"" ++ s ++ "\""
+> showJ (JSeq sq) = "[" ++ intercalate ", " (map showJ sq) ++ "]"
+> showJ (JObj jo) = "{" ++ intercalate ", " (map bindings jo) ++ "}"
+>   where bindings (key, json) = "\"" ++ key ++ "\": " ++ showJ json
 
 3. Aufgabe
 Definieren Sie die Typklasse ToJSON. Sie soll eine Methode toJSON haben, die
 ein Wert nimmt und diesen in ein JSON Wert übersetzt:
 
->
+> class ToJSON a where
+>   toJSON :: a -> JSON
 
 4. Aufgabe
 Implementieren Sie Instanzen für String, Bool, Double, Int und Integer:
 Hinweis: Integer und Int können Sie mit der Funktion fromIntegral in ein Double übersezten
 
->
+> instance ToJSON String where
+>   toJSON = JStr
+
+> instance ToJSON Bool where
+>   toJSON = JBool
+
+> instance ToJSON Double where
+>   toJSON = JNum
+
+> instance ToJSON Int where
+>   toJSON i = JNum (fromIntegral i)
+
+> instance ToJSON Integer where
+>   toJSON i = JNum (fromIntegral i)
 
 5. Aufgabe
 Implementieren Sie eine Instanz für Listen deren Elemente einen Typ haben
 der zur Klasse ToJSON gehört. Als Resultat soll eine JSeq rauskommen.
 
->
+> instance ToJSON a => ToJSON [a] where
+>   toJSON as = JSeq (map toJSON as)
 
 6. Aufgabe
 Gegeben ist der Type Student. Implementieren Sie eine ToJSON Instanz
@@ -91,6 +117,8 @@ für diesen Typ.
 >  matrikelNr :: Int
 > } deriving Show
 
+> instance ToJSON Student where
+>   toJSON (Student e m) = JObj [("email", toJSON e), ("matrikelNr", toJSON m)]
 
 Wenn Sie alles richtig gemacht haben, können Sie jetzt eine Liste von Studenten
 nach JSON übersetzen und hübsch als String serialisieren:
@@ -100,7 +128,7 @@ nach JSON übersetzen und hübsch als String serialisieren:
 Aktivieren Sie folgende Zeile wenn Sie alle notwendigen Funktionen definiert haben und führen Sie die
 Funktion main aus:
 
- main = (putStr.showJ.toJSON) students
+> main = (putStr.showJ.toJSON) students
 
 
 
